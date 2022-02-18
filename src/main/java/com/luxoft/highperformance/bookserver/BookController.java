@@ -162,7 +162,7 @@ public class BookController {
         return all.get(index);
     }
 
-    @Measure(value = "baseline", warmup = 50)
+    @Measure(value = "Title hash map 1", warmup = 50)
     @GetMapping("keywords3/{keywordsString}")
     public Set<Book> getBookByTitleHashMap(@PathVariable String keywordsString) {
         String[] keywords = keywordsString.split(" ");
@@ -182,6 +182,24 @@ public class BookController {
         }
 
         return bookSet;
+    }
+
+    @Measure(value = "Title hash map 2", warmup = 50)
+    @GetMapping("keywords4/{keywordsString}")
+    public List<Book> getBookByTitleHashMap2(@PathVariable String keywordsString) {
+        String[] keywords = keywordsString.split(" ");
+
+        List<Book> res = new ArrayList<>();
+        Map<String, Set<Book>> map = Book.keywordMap;
+        Set<Book> books = map.get(keywords[0]);
+        if (books != null) {
+            for (Book book : books) {
+                if (book.getKeywords().containsAll(Arrays.asList(keywords))) {
+                    res.add(book);
+                }
+            }
+        }
+        return res;
     }
 
     @GetMapping

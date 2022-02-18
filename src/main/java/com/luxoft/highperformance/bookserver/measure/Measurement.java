@@ -2,13 +2,10 @@ package com.luxoft.highperformance.bookserver.measure;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import lombok.Data;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.SortedSet;
+import java.util.Collections;
+import java.util.Set;
 import java.util.TreeSet;
+import lombok.Data;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -22,7 +19,7 @@ public class Measurement {
     private String boost;
 
     @JsonIgnore
-    private SortedSet<Long> times = new TreeSet<>();
+    private Set<Long> times = Collections.synchronizedSet(new TreeSet<>());
 
     public Long getPercentile50() {
         return getPercentile(50);

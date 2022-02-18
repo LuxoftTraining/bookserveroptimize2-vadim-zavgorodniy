@@ -1,11 +1,21 @@
 package com.luxoft.highperformance.bookserver.model;
 
 
-import lombok.*;
-
-import javax.persistence.*;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Index;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+import javax.xml.bind.annotation.XmlTransient;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 @Entity
 @Getter @Setter @ToString
@@ -22,6 +32,10 @@ public class Book {
     private String keyword1;
     private String keyword2;
     private String keyword3;
+
+    @Transient
+    @XmlTransient
+    private Set<String> keywords = new HashSet<>();
 
     public final static int KEYWORDS_AMOUNT = 3;
     public static Map<String, Set<Book>> keywordMap = new ConcurrentHashMap<>();
@@ -45,6 +59,7 @@ public class Book {
                 keywordMap.put(keyword, set);
             }
         }
+        book.keywords.addAll(keywords);
     }
 
     @Override
