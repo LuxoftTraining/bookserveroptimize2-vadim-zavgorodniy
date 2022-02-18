@@ -1,6 +1,8 @@
 package com.luxoft.highperformance.bookserver.model;
 
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +41,8 @@ public class Book {
 
     public final static int KEYWORDS_AMOUNT = 3;
     public static Map<String, Set<Book>> keywordMap = new ConcurrentHashMap<>();
-    public static Map<Integer, Set<Book>> booksByKeyHash = new ConcurrentHashMap<>();
+    //public static Map<Integer, Set<Book>> booksByKeyHash = new ConcurrentHashMap<>();
+    public static Int2ObjectMap<Set<Book>> booksByKeyHash = new Int2ObjectArrayMap<>();
 
     public static void initKeywords(Book book) {
         String[] keywords = book.getTitle().split(" ");

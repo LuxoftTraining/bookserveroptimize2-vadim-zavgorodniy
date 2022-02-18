@@ -23,7 +23,7 @@ public class BookController {
     @Autowired
     BookRepository bookRepository;
 
-    @Measure(value = "baseline", warmup = 50)
+    @Measure(value = "baseline", warmup = 50, baseline = true)
     @GetMapping("keywords0/{keywordsString}")
     public List<Book> getBookByTitle(@PathVariable String keywordsString) {
         String[] keywords = keywordsString.split(" ");
