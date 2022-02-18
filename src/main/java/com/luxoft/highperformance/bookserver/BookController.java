@@ -202,6 +202,24 @@ public class BookController {
         return res;
     }
 
+    @Measure(value = "Title by index", warmup = 50)
+    @GetMapping("keywords5/{keywordsString}")
+    public List<Book> getBookByTitleIndex(@PathVariable String keywordsString) {
+        String[] keywords = keywordsString.split(" ");
+
+        List<Book> res = new ArrayList<>();
+        Map<Integer, Set<Book>> map = Book.booksByKeyHash;
+        Set<Book> books = map.get(keywords[0].hashCode());
+        if (books != null) {
+            for (Book book : books) {
+                if (book.getKeywords().containsAll(Arrays.asList(keywords))) {
+                    res.add(book);
+                }
+            }
+        }
+        return res;
+    }
+
     @GetMapping
     public List<Book> getBooks() {
         return bookRepository.findAll();

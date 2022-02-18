@@ -39,6 +39,7 @@ public class Book {
 
     public final static int KEYWORDS_AMOUNT = 3;
     public static Map<String, Set<Book>> keywordMap = new ConcurrentHashMap<>();
+    public static Map<Integer, Set<Book>> booksByKeyHash = new ConcurrentHashMap<>();
 
     public static void initKeywords(Book book) {
         String[] keywords = book.getTitle().split(" ");
@@ -57,6 +58,21 @@ public class Book {
                 HashSet<Book> set = new HashSet<>();
                 set.add(book);
                 keywordMap.put(keyword, set);
+            }
+        }
+        // book.keywords.addAll(keywords);
+    }
+
+    private static void addToHashMaps2(Book book, List<String> keywords) {
+        for (int i=0; i< KEYWORDS_AMOUNT; i++) {
+            int keywordHash = keywords.get(i).hashCode();
+            Set<Book> books = booksByKeyHash.get(keywordHash);
+            if (books != null) {
+                books.add(book);
+            } else {
+                HashSet<Book> set = new HashSet<>();
+                set.add(book);
+                booksByKeyHash.put(keywordHash, set);
             }
         }
         book.keywords.addAll(keywords);
