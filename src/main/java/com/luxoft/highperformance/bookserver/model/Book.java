@@ -41,8 +41,8 @@ public class Book {
 
     public final static int KEYWORDS_AMOUNT = 3;
     public static Map<String, Set<Book>> keywordMap = new ConcurrentHashMap<>();
-    //public static Map<Integer, Set<Book>> booksByKeyHash = new ConcurrentHashMap<>();
-    public static Int2ObjectMap<Set<Book>> booksByKeyHash = new Int2ObjectArrayMap<>();
+    public static Map<Integer, Set<Book>> booksByHashHM = new ConcurrentHashMap<>();
+    public static Int2ObjectMap<Set<Book>> booksByHashFastUtil = new Int2ObjectArrayMap<>();
 
     public static void initKeywords(Book book) {
         String[] keywords = book.getTitle().split(" ");
@@ -50,6 +50,8 @@ public class Book {
         if (keywords.length > 1) book.setKeyword2(keywords[2]);
         if (keywords.length > 2) book.setKeyword3(keywords[3]);
         addToHashMaps(book, List.of(keywords[0],keywords[2],keywords[3]));
+        addToHashMapHS(book, List.of(keywords[0],keywords[2],keywords[3]));
+        addToHashMapFastUtil(book, List.of(keywords[0],keywords[2],keywords[3]));
     }
 
     private static void addToHashMaps(Book book, List<String> keywords) {
@@ -63,22 +65,37 @@ public class Book {
                 keywordMap.put(keyword, set);
             }
         }
-        // book.keywords.addAll(keywords);
+        book.keywords.addAll(keywords);
     }
 
-    private static void addToHashMaps2(Book book, List<String> keywords) {
+    private static void addToHashMapHS(Book book, List<String> keywords) {
         for (int i=0; i< KEYWORDS_AMOUNT; i++) {
             int keywordHash = keywords.get(i).hashCode();
-            Set<Book> books = booksByKeyHash.get(keywordHash);
+            Set<Book> books = booksByHashHM.get(keywordHash);
             if (books != null) {
                 books.add(book);
             } else {
                 HashSet<Book> set = new HashSet<>();
                 set.add(book);
-                booksByKeyHash.put(keywordHash, set);
+                booksByHashHM.put(keywordHash, set);
             }
         }
-        book.keywords.addAll(keywords);
+        // book.keywords.addAll(keywords);
+    }
+
+    private static void addToHashMapFastUtil(Book book, List<String> keywords) {
+        for (int i=0; i< KEYWORDS_AMOUNT; i++) {
+            int keywordHash = keywords.get(i).hashCode();
+            Set<Book> books = booksByHashFastUtil.get(keywordHash);
+            if (books != null) {
+                books.add(book);
+            } else {
+                HashSet<Book> set = new HashSet<>();
+                set.add(book);
+                booksByHashFastUtil.put(keywordHash, set);
+            }
+        }
+        // book.keywords.addAll(keywords);
     }
 
     @Override

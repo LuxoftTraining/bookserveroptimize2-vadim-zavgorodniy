@@ -3,16 +3,23 @@ package com.luxoft.highperformance.bookserver;
 import com.luxoft.highperformance.bookserver.measure.Measure;
 import com.luxoft.highperformance.bookserver.model.Book;
 import com.luxoft.highperformance.bookserver.repositories.BookRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.*;
-
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
+import javax.sql.DataSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("books")
@@ -22,6 +29,9 @@ public class BookController {
 
     @Autowired
     BookRepository bookRepository;
+
+    @Autowired
+    BookService bookService;
 
     @Measure(value = "baseline", warmup = 50, baseline = true)
     @GetMapping("keywords0/{keywordsString}")
@@ -165,59 +175,25 @@ public class BookController {
     @Measure(value = "Title hash map 1", warmup = 50)
     @GetMapping("keywords3/{keywordsString}")
     public Set<Book> getBookByTitleHashMap(@PathVariable String keywordsString) {
-        String[] keywords = keywordsString.split(" ");
-
-        Set<Book> bookSet = null;
-        for (String keyword : keywords) {
-            Set<Book> booksWithKeywordSet = new HashSet<>();
-            Map<String, Set<Book>> map = Book.keywordMap;
-            if (map.containsKey(keyword)) {
-                booksWithKeywordSet.addAll(map.get(keyword));
-            }
-            if (bookSet == null) {
-                bookSet = booksWithKeywordSet;
-            } else {
-                bookSet.retainAll(booksWithKeywordSet);
-            }
-        }
-
-        return bookSet;
+        return bookService.getBooksByTitleHashMap(keywordsString);
     }
 
     @Measure(value = "Title hash map 2", warmup = 50)
     @GetMapping("keywords4/{keywordsString}")
     public List<Book> getBookByTitleHashMap2(@PathVariable String keywordsString) {
-        String[] keywords = keywordsString.split(" ");
-
-        List<Book> res = new ArrayList<>();
-        Map<String, Set<Book>> map = Book.keywordMap;
-        Set<Book> books = map.get(keywords[0]);
-        if (books != null) {
-            for (Book book : books) {
-                if (book.getKeywords().containsAll(Arrays.asList(keywords))) {
-                    res.add(book);
-                }
-            }
-        }
-        return res;
+        return bookService.getBooksByTitleHashMap2(keywordsString);
     }
 
-    @Measure(value = "Title by index", warmup = 50)
+    @Measure(value = "Title by HM index", warmup = 50)
     @GetMapping("keywords5/{keywordsString}")
-    public List<Book> getBookByTitleIndex(@PathVariable String keywordsString) {
-        String[] keywords = keywordsString.split(" ");
+    public List<Book> getBookByHmIndex(@PathVariable String keywordsString) {
+        return bookService.getBooksByHashHMIndex(keywordsString);
+    }
 
-        List<Book> res = new ArrayList<>();
-        Map<Integer, Set<Book>> map = Book.booksByKeyHash;
-        Set<Book> books = map.get(keywords[0].hashCode());
-        if (books != null) {
-            for (Book book : books) {
-                if (book.getKeywords().containsAll(Arrays.asList(keywords))) {
-                    res.add(book);
-                }
-            }
-        }
-        return res;
+    @Measure(value = "Title by FastUtil HM index", warmup = 50)
+    @GetMapping("keywords6/{keywordsString}")
+    public List<Book> getBookByFastUtilIndex(@PathVariable String keywordsString) {
+        return bookService.getBooksByHashFastUtilIndex(keywordsString);
     }
 
     @GetMapping
@@ -238,5 +214,81 @@ public class BookController {
         Book.initKeywords(book);
         return bookRepository.save(book);
     }
+/*
+{
+  "Title by HM index": {
+    "name": "Title by HM index",
+    "time": 38409,
+    "callsCount": 8723,
+    "callsCountMeasured": 8704,
+    "latency": 4,
+    "percent": 0.0,
+    "boost": "420085.75",
+    "percentile50": 22,
+    "percentile90": 85,
+    "percentile99": 1832
+  },
+  "Title hash map 1": {
+    "name": "Title hash map 1",
+    "time": 40369,
+    "callsCount": 8708,
+    "callsCountMeasured": 8693,
+    "latency": 4,
+    "percent": 0.0,
+    "boost": "420085.75",
+    "percentile50": 21,
+    "percentile90": 69,
+    "percentile99": 391
+  },
+  "baseline": {
+    "name": "baseline",
+    "time": 904024757,
+    "callsCount": 587,
+    "callsCountMeasured": 538,
+    "latency": 1680343,
+    "percent": 100.0,
+    "boost": "1",
+    "percentile50": 1828821,
+    "percentile90": 2038513,
+    "percentile99": 3582281
+  },
+  "Title by FastUtil HM index": {
+    "name": "Title by FastUtil HM index",
+    "time": 4978283,
+    "callsCount": 8736,
+    "callsCountMeasured": 8732,
+    "latency": 570,
+    "percent": 0.03,
+    "boost": "2947.97",
+    "percentile50": 638,
+    "percentile90": 5172,
+    "percentile99": 21880
+  },
+  "Title hash map 2": {
+    "name": "Title hash map 2",
+    "time": 36940,
+    "callsCount": 8707,
+    "callsCountMeasured": 8682,
+    "latency": 4,
+    "percent": 0.0,
+    "boost": "420085.75",
+    "percentile50": 20,
+    "percentile90": 98,
+    "percentile99": 2951
+  },
+  "3 keywords indexed in DB": {
+    "name": "3 keywords indexed in DB",
+    "time": 8900288,
+    "callsCount": 8966,
+    "callsCountMeasured": 8921,
+    "latency": 997,
+    "percent": 0.06,
+    "boost": "1685.4",
+    "percentile50": 1290,
+    "percentile90": 12040,
+    "percentile99": 28443
+  }
+}
+ */
 
 }
